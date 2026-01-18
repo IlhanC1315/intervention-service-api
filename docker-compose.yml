@@ -1,0 +1,16 @@
+services:
+  db:
+    image: postgres:17
+    container_name: ISA_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: isa
+      POSTGRES_PASSWORD: isa_password
+      POSTGRES_DB: isa
+    ports:
+      - "5432:5432"
+    volumes:
+      - isa_pgdata:/var/lib/postgresql/data
+
+volumes:
+  isa_pgdata:
