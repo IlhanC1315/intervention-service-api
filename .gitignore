@@ -1,0 +1,50 @@
+# ======================
+# Variables d'environnement
+# ======================
+.env
+.env.*
+!.env.example
+
+# ======================
+# OS
+# ======================
+.DS_Store
+Thumbs.db
+
+# ======================
+# Logs
+# ======================
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# ======================
+# Dépendances
+# ======================
+node_modules/
+
+# ======================
+# Build
+# ======================
+dist/
+build/
+
+# ======================
+# IDE
+# ======================
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+.idea/
+
+# ======================
+# Temporaire
+# ======================
+.temp/
+.tmp/
+*.pid
+*.seed
