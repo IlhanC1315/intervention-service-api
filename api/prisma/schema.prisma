@@ -5,10 +5,265 @@
 // Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
 
 generator client {
-  provider = "prisma-client"
+  provider = "prisma-client-js"
   output   = "../generated/prisma"
 }
 
 datasource db {
   provider = "postgresql"
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  INACTIVE
+  EXPIRED
+}
+
+enum Role {
+  PATRON
+  PLANIFICATEUR
+  TECHNICIEN
+  CLIENT
+}
+
+enum ConsentLogType {
+  CGU
+  PRIVACY_POLICY
+  COOKIES
+}
+
+enum InvitationStatus {
+  PENDING
+  ACCEPTED
+  EXPIRED
+}
+
+enum InterventionStatus {
+  DRAFT
+  SCHEDULED
+  IN_PROGRESS
+  COMPLETED
+  CANCELED
+}
+
+enum Priority {
+  LOW
+  NORMAL
+  HIGH
+  URGENT
+}
+
+enum InterventionType {
+  REPAIR
+  INSTALLATION
+  MAINTENANCE
+  OTHER
+}
+
+enum InterventionEventType {
+  STATUS_CHANGED
+  TECHNICIAN_ASSIGNED
+  TECHNICIAN_REMOVED
+  CUSTOMER_ASSIGNED
+  COMMENT_ADDED
+  ATTACHMENT_ADDED
+  REPORT_SUBMITTED
+  ISSUE_REPORTED
+}
+
+model Company {
+  id String @id @default(uuid())
+  users User[]
+  customers Customer[]
+  interventions Intervention[]
+  invitations Invitation[]
+  name String 
+  siret String @unique
+  phone String? 
+  email String? @unique
+  address String?
+  city String
+  zipCode String
+  country String
+  subscriptionStatus SubscriptionStatus @default(ACTIVE)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@map("companies")
+}
+
+model User {
+  id String @id @default(uuid())
+  companyId String
+  company Company @relation(fields: [companyId], references: [id])
+  consentLogs ConsentLog[]
+  sentInvitations Invitation[] @relation("InvitedBy")
+  createdInterventions Intervention[] @relation("CreatedBy")
+  customer Customer?
+  comments Comment[] @relation("CommentAuthor")
+  attachments Attachment[] @relation("UploadedBy")
+  reports Report[] @relation("ReportTechnician")
+  interventionEvents InterventionEvent[] @relation("EventAuthor")
+  firstName String
+  lastName String
+  email String @unique
+  passwordHash String
+  role Role 
+  isActive Boolean @default(true)
+  consentGiven Boolean @default(false)
+  consentGivenAt DateTime?
+  dataDeletedAt DateTime?
+  assignedInterventions InterventionTechnician[] @relation("AssignedTo")
+  managedAssignments InterventionTechnician[] @relation("AssignedBy")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@map("users")
+}
+
+model ConsentLog {
+  id String @id @default(uuid())
+  userId String
+  user User @relation(fields: [userId], references: [id])
+  type ConsentLogType
+  version String
+  ipAddress String?
+  givenAt DateTime @default(now())
+  @@map("consent_logs")
+}
+
+model Invitation {
+  id String @id @default(uuid())
+  companyId String 
+  company Company @relation(fields: [companyId], references: [id])
+  invitedById String
+  user User @relation("InvitedBy", fields: [invitedById], references: [id])
+  email String 
+  role Role 
+  token String @unique
+  status InvitationStatus @default(PENDING)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  @@map("invitations")
+}
+
+model Customer {
+  id String @id @default(uuid())
+  companyId String
+  company Company @relation(fields: [companyId], references: [id])
+  userId String? @unique
+  user User? @relation(fields: [userId], references: [id])
+  interventions Intervention[]
+  firstName String
+  lastName String
+  email String @unique
+  phone String?
+  address String?
+  city String?
+  zipCode String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@map("customers")
+}
+
+model Intervention {
+  id String @id @default(uuid())
+  companyId String
+  company Company @relation(fields: [companyId], references: [id])
+  customerId String
+  customer Customer @relation(fields: [customerId], references: [id])
+  createdById String
+  user User @relation("CreatedBy", fields: [createdById], references: [id])
+  code String @unique
+  title String
+  description String?
+  status InterventionStatus @default(DRAFT)
+  priority Priority @default(NORMAL)
+  type InterventionType @default(OTHER)
+  address String?
+  city String?
+  zipCode String?
+  technicians InterventionTechnician[]
+  events InterventionEvent[]
+  comments Comment[]
+  attachments Attachment[]
+  reports Report[]
+  scheduledAt DateTime?
+  startedAt DateTime?
+  completedAt DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@map("interventions")
+}
+
+model InterventionTechnician {
+  id String @id @default(uuid())
+  interventionId String
+  intervention Intervention @relation(fields: [interventionId], references: [id])
+  userId String
+  user User @relation("AssignedTo", fields: [userId], references: [id])
+  assignedById String
+  userAssignedBy User @relation("AssignedBy", fields: [assignedById], references: [id])
+  assignedAt DateTime @default(now())
+  @@map("intervention_technicians")
+  @@unique([interventionId, userId])
+}
+
+model Report {
+  id String @id @default(uuid())
+  interventionId String
+  technicianId String
+  content String
+  materielsUsed String?
+  issueReported Boolean @default(false)
+  issueDetail String? 
+  submittedAt DateTime @default(now())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  intervention Intervention @relation(fields: [interventionId], references: [id])
+  technician User @relation("ReportTechnician", fields: [technicianId], references: [id])
+
+  @@map("reports")
+}
+
+model InterventionEvent {
+  id String @id @default(uuid())
+  interventionId String
+  userId String
+  type InterventionEventType 
+  description String?
+  metadata Json?
+  createdAt DateTime @default(now())
+
+  intervention Intervention @relation(fields: [interventionId], references: [id])
+  user User @relation("EventAuthor", fields: [userId], references: [id])
+  @@map("intervention_events")
+}
+
+model Comment {
+  id String @id @default(uuid())
+  interventionId String
+  userId String
+  content String
+  isPrivate Boolean @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  intervention Intervention @relation(fields: [interventionId], references: [id])
+  author User @relation("CommentAuthor", fields: [userId], references: [id])
+  @@map("comments")
+}
+
+model Attachment {
+  id String @id @default(uuid())
+  interventionId String
+  uploadedById String
+  fileName String
+  fileUrl String
+  mimeType String
+  fileSize Int
+  createdAt DateTime @default(now())
+
+  intervention Intervention @relation(fields: [interventionId], references: [id])
+  uploadedBy User @relation("UploadedBy", fields: [uploadedById], references: [id])
+  @@map("attachments")
 }
