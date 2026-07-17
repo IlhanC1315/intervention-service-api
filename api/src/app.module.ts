@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { PrismaModule } from './prisma/prisma.module';
@@ -13,7 +14,22 @@ import { CommentModule } from './comment/comment.module';
 import { AttachmentModule } from './attachment/attachment.module';
 
 @Module({
-  imports: [PrismaModule, AuthModule, CompanyModule, UserModule, CustomerModule, InvitationModule, InterventionModule, ReportModule, CommentModule, AttachmentModule],
+  imports: [
+    ConfigModule.forRoot({
+      isGlobal: true,  // disponible dans tous les modules
+      envFilePath: '.env',
+    }),
+    PrismaModule,
+    AuthModule,
+    CompanyModule,
+    UserModule,
+    CustomerModule,
+    InvitationModule,
+    InterventionModule,
+    ReportModule,
+    CommentModule,
+    AttachmentModule,
+  ],
   controllers: [AppController],
   providers: [AppService],
 })
