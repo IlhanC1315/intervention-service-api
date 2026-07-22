@@ -1,10 +1,11 @@
-import { ConflictException, Injectable, UnauthorizedException } from '@nestjs/common';
+import { ConflictException, Injectable, InternalServerErrorException, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import * as bcrypt from 'bcrypt';
 import { Company } from 'generated/prisma';
+import { error } from 'console';
 
 @Injectable()
 export class AuthService {
@@ -37,7 +38,7 @@ export class AuthService {
                 }
             });
 
-            return tx.user.create({
+            const newUser = await tx.user.create({
                 data: {
                     companyId: company.id,
                     firstName: dto.firstName,
@@ -49,6 +50,22 @@ export class AuthService {
                     consentGivenAt: new Date(),
                 }
             });
+
+            await tx.consentLog.create({
+                data: {
+                    userId: newUser.id,
+                    type: 'CGU',
+                    version: '1.0',
+                    ipAddress: null
+                }
+            });
+
+            return newUser;
+        }).catch((error) => {
+            if(error.code === 'P2002') {
+                throw new ConflictException('Email ou Siret déja utilisé');
+            }
+            throw new InternalServerErrorException('Erreur lors de la création du compte');
         });
 
         // génération du JWT token
