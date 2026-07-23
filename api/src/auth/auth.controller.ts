@@ -1,8 +1,9 @@
-import { Controller, Post, Body, HttpCode } from '@nestjs/common';
+import { Controller, Post, Body, HttpCode, Req } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
+import type { Request } from 'express';
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -24,8 +25,9 @@ export class AuthController {
     @ApiResponse({ status: 201, description: 'Compte créé avec succès' })
     @ApiResponse({ status: 400, description: 'Enregistrement échoué' })
     @ApiResponse({ status: 409, description: 'Email déja utilisé' })
-    async register(@Body() dto: RegisterDto): Promise<{ access_token: string }> {
-        return this.authService.register(dto)
+    async register(@Body() dto: RegisterDto, @Req() req: Request): Promise<{ access_token: string }> {
+        const ipAddress = req.ip ?? null;
+        return this.authService.register(dto, ipAddress)
     }
 
 }

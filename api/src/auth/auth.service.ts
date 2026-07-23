@@ -5,7 +5,6 @@ import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import * as bcrypt from 'bcrypt';
 import { Company } from 'generated/prisma';
-import { error } from 'console';
 
 @Injectable()
 export class AuthService {
@@ -14,7 +13,7 @@ export class AuthService {
         private jwt: JwtService
     ) {}
 
-    async register(dto: RegisterDto): Promise<{ access_token: string }> {
+    async register(dto: RegisterDto, ipAddress: string | null): Promise<{ access_token: string }> {
         //Verification que l'email n'existe pas 
         const existingUser = await this.prisma.client.user.findUnique({
             where: { email: dto.email }
@@ -56,7 +55,7 @@ export class AuthService {
                     userId: newUser.id,
                     type: 'CGU',
                     version: '1.0',
-                    ipAddress: null
+                    ipAddress: ipAddress
                 }
             });
 
