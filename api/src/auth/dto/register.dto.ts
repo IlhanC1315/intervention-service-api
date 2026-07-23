@@ -49,7 +49,7 @@ export class RegisterDto {
     password!: string;
 
     @ApiProperty({ example: 'PlacoEnterprise', description: "Nom de l'entreprise" })
-    @Transform(({ value }) => value.trim().toLowerCase())
+    @Transform(({ value }) => value.trim())
     @IsNotEmpty({ message: 'Obligatoire' })
     @IsString({ message: 'Doit être un texte' })
     @MinLength(3, { message: 'Minimum 3 caractères '})
