@@ -16,8 +16,9 @@ export class AuthController {
     @ApiResponse({ status: 200, description: 'Connexion' })
     @ApiResponse({ status: 401, description: 'Identifiants incorrects' })
     @ApiResponse({ status: 400, description: 'Données invalides' })
-    async login(@Body() dto: LoginDto): Promise<{ access_token: string }> {
-        return this.authService.login(dto);
+    async login(@Body() dto: LoginDto, @Req() req: Request): Promise<{ access_token: string }> {
+        const ipAddress = req.ip ?? null;
+        return this.authService.login(dto, ipAddress);
     }
 
     @Post('register')

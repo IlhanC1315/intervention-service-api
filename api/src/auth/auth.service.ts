@@ -78,7 +78,7 @@ export class AuthService {
         return { access_token: token };
     }
 
-    async login(dto: LoginDto): Promise<{ access_token: string }> {
+    async login(dto: LoginDto, ipAddress: string | null): Promise<{ access_token: string }> {
         // cherche l'utilisateur par email
         const existingUser = await this.prisma.client.user.findUnique({
             where: { email: dto.email }
@@ -89,8 +89,16 @@ export class AuthService {
         const isMatch = await bcrypt.compare(dto.password, existingUser.passwordHash)
         if (!isMatch) throw new UnauthorizedException('Identifiants incorrects');
 
+        // mise a jour du dernier login
+        await this.prisma.client.user.update({
+            where: { id: existingUser.id },
+            data: {
+                lastLoginAt: new Date(),
+                lastLoginIp: ipAddress,
+            }
+        })
+        
         // génération du JWT token
-
         const token: string = this.jwt.sign({
             sub: existingUser.id,
             role: existingUser.role,
