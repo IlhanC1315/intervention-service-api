@@ -1,13 +1,12 @@
 import {
     IsString,
     IsEmail,
-    IsNotEmpty,
     IsOptional,
     MinLength,
     MaxLength,
     Matches,
 } from "class-validator";
-import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
+import { ApiPropertyOptional } from "@nestjs/swagger";
 import { Transform } from "class-transformer";
 
 export class UpdateCompanyDto {
